@@ -2,6 +2,7 @@ import os
 import pickle
 import torch
 import torchaudio
+from scipy.io import wavfile
 from torchaudio.transforms import MFCC
 import numpy as np
 
@@ -42,6 +43,40 @@ class GMM_Detector:
 
     def predict(self, path):
         audio, sr = torchaudio.load(path)
+        all_pred = []
+        for batch in batching(audio, self.chunk):
+            feature = self.extractor.extract_feature(batch)
+            feature = feature.reshape(feature.shape[0], -1)
+            score_0 = self.model_0.score_samples(feature)
+            score_1 = self.model_1.score_samples(feature)
+            for i in range(len(score_1)):
+                if score_0[i] > score_1[i]:
+                    all_pred.append(0)
+                else:
+                    all_pred.append(1)
+
+        all_pred.append(0)
+        segment = []
+        start = -1
+        end = -1
+        for i, y in enumerate(all_pred):
+            if y == 1 and (i == 0 or all_pred[i - 1] == 0):
+                start = i
+
+            if y == 0 and i > 0 and all_pred[i - 1] == 1:
+                end = i
+
+            if start != -1 and end != -1:
+                segment.append([start * self.chunk / 1000, end * self.chunk / 1000])
+                start = -1
+                end = -1
+
+        segment = remove_small(segment)
+        return segment
+
+
+    def predict_audio(self, file):
+        sr, audio  = wavfile.read(file)
         all_pred = []
         for batch in batching(audio, self.chunk):
             feature = self.extractor.extract_feature(batch)

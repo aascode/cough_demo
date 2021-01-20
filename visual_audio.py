@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import librosa
 import numpy as np
 import requests
-from o
 
 
 class Vis:
@@ -18,8 +17,8 @@ class Vis:
         Private function.
         Generates time axis for a raw signal and its labels.
         '''
-        time = np.linspace(0, len(raw) / SAMPLE_RATE, num=len(raw))
-        time_labels = np.linspace(0, len(raw) / SAMPLE_RATE, num=len(labels))
+        time = np.linspace(0, len(raw) / 16000, num=len(raw))
+        time_labels = np.linspace(0, len(raw) / 16000, num=len(labels))
         return time, time_labels
     
     
@@ -87,12 +86,10 @@ class Vis:
 
 
 def draw(path, segments):
-    audio, sr = librosa.load(path, sr=SAMPLE_RATE)
+    audio, sr = librosa.load(path, sr=16000)
     label = [0] * len(audio)
-    for segment in segments:
-        start = segment['start']
-        end = segment['end']
-        for i in range(int(start * SAMPLE_RATE), int(end * SAMPLE_RATE)):
+    for start, end in segments:
+        for i in range(int(start * 16000), int(end * 16000)):
             label[i] = 1
 
     label = np.array(label)
@@ -101,7 +98,7 @@ def draw(path, segments):
 
 def main():
     url = "http://localhost:5002/api/detect"
-    path = "/home/chiendb/Data/Data_Cough/test/Test1.wav"
+    path = "/home/lehoa/PycharmProjects/cough_classification/Data_Cough/audio/Cough3.wav"
     payload = {"token": "12345678", "alg": "lstm", "audio_path": path}
     response = requests.post(url, json=payload)
     if response.status_code == 200:

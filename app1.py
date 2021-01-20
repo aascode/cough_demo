@@ -1,7 +1,6 @@
 import io
 import os
 import shutil
-
 import librosa as ls
 import streamlit as st
 import yaml
@@ -11,8 +10,10 @@ from scipy.io import wavfile
 from matplotlib import pyplot as plt
 import csv
 import detection
+import visual_audio
 from datetime import datetime
 from matplotlib import pyplot as plt
+from pydub import AudioSegment
 
 cur_datetime = datetime.now()
 cur_year = cur_datetime.year
@@ -82,6 +83,119 @@ def update_file():
             st.success("Send file successful, Thank you!!!")
 
 
+def file1():
+    audio = st.audio("data_test/test1.wav", format="audio/wav")
+    rate, audio = wavfile.read("data_test/test1.wav")
+    data_shape = audio.shape
+    if len(data_shape) == 2:
+        audio = audio[:, 0]
+    fig, ax = plt.subplots(figsize=(20, 4))
+    ax.plot(audio)
+    st.pyplot()
+    segments = gmm_dectector.predict("data_test/test1.wav")
+
+    time = []
+    list_start = []
+    list_end = []
+    list_class = []
+
+    for start, end in segments:
+        dur = end - start
+        if dur <= 1:
+            time.append(cur_year_month_day)
+            label = "Cough"
+            list_start.append(start)
+            list_end.append(end)
+            list_class.append(label)
+        else:
+            time.append(cur_year_month_day)
+            label = "Whooping"
+            list_start.append(start)
+            list_end.append(end)
+            list_class.append(label)
+
+    visual_audio.draw("data_test/test1.wav", segments)
+    st.pyplot()
+    data = {'Date time': time, 'Time start': list_start, 'Time end': list_end, 'Classification Cough': list_class}
+    df = pd.DataFrame(data, columns=["Date time", "Time start", "Time end", "Classification Cough"])
+    df.to_csv("statistics.csv", mode="a", header=False)
+    df
+
+def file2():
+    audio = st.audio("data_test/test2.wav", format="audio/wav")
+    rate, audio = wavfile.read("data_test/test2.wav")
+    data_shape = audio.shape
+    if len(data_shape) == 2:
+        audio = audio[:, 0]
+    fig, ax = plt.subplots(figsize=(20, 4))
+    ax.plot(audio)
+    st.pyplot()
+    segments = gmm_dectector.predict("data_test/test2.wav")
+
+    time = []
+    list_start = []
+    list_end = []
+    list_class = []
+
+    for start, end in segments:
+        dur = end - start
+        if dur <= 1:
+            time.append(cur_year_month_day)
+            list_start.append(start)
+            list_end.append(end)
+            list_class.append("Cough")
+        else:
+            time.append(cur_year_month_day)
+            list_start.append(start)
+            list_end.append(end)
+            list_class.append("Whooping")
+
+    visual_audio.draw("data_test/test2.wav", segments)
+    st.pyplot()
+
+    data = {'Date time': time, 'Time start': list_start, 'Time end': list_end, 'Classification Cough': list_class}
+    df = pd.DataFrame(data, columns=["Date time", "Time start", "Time end", "Classification Cough"])
+    df.to_csv("statistics.csv", mode="a", header=False)
+    df
+
+def file3():
+    audio = st.audio("data_test/test3.wav", format="audio/wav")
+    rate, audio = wavfile.read("data_test/test3.wav")
+    data_shape = audio.shape
+    if len(data_shape) == 2:
+        audio = audio[:, 0]
+    fig, ax = plt.subplots(figsize=(20, 4))
+    ax.plot(audio)
+    st.pyplot()
+    segments = gmm_dectector.predict("data_test/test3.wav")
+
+    time = []
+    list_start = []
+    list_end = []
+    list_class = []
+
+    for start, end in segments:
+        dur = end - start
+        if dur <= 1:
+            time.append(cur_year_month_day)
+            list_start.append(start)
+            list_end.append(end)
+            list_class.append("Cough")
+        else:
+            time.append(cur_year_month_day)
+            list_start.append(start)
+            list_end.append(end)
+            list_class.append("Whooping")
+
+    visual_audio.draw("data_test/test3.wav", segments)
+    st.pyplot()
+    data = {'Date time': time, 'Time start': list_start, 'Time end': list_end,
+            'Classification Cough': list_class}
+    df = pd.DataFrame(data, columns=["Date time", "Time start", "Time end", "Classification Cough"])
+    df.to_csv("statistics.csv", mode="a", header=False)
+    df
+
+
 def detection_classification():
     st.set_option('deprecation.showPyplotGlobalUse', False)
     st.subheader("Detection and Classification Cough")
@@ -91,54 +205,15 @@ def detection_classification():
         if task == "Cough 1":
             button = st.button("Start")
             if button:
-                audio = st.audio("data_test/Cough1.wav", format="audio/wav")
-                rate, audio = wavfile.read("data_test/Cough1.wav")
+                audio = st.audio("data_example/Cough1.wav", format="audio/wav")
+                rate, audio = wavfile.read("data_example/Cough1.wav")
                 data_shape = audio.shape
                 if len(data_shape) == 2:
                     audio = audio[:, 0]
                 fig, ax = plt.subplots(figsize=(20, 4))
                 ax.plot(audio)
                 st.pyplot()
-                segments = gmm_dectector.predict("data_test/Cough1.wav")
-
-                time = []
-                list_start = []
-                list_end = []
-                list_class = []
-
-                for start, end in segments:
-                    dur = end - start
-                    if dur <= 1:
-                        time.append(cur_year_month_day)
-                        label = "Cough"
-                        list_start.append(start)
-                        list_end.append(end)
-                        list_class.append(label)
-                    else:
-                        time.append(cur_year_month_day)
-                        label = "Whooping"
-                        list_start.append(start)
-                        list_end.append(end)
-                        list_class.append(label)
-
-
-                data = {'Date time' : time,'Time start': list_start, 'Time end': list_end, 'Classification Cough': list_class}
-                df = pd.DataFrame(data, columns=["Date time", "Time start", "Time end", "Classification Cough"])
-                df.to_csv("statistics.csv", mode="a", header=False)
-                df
-
-        elif task == "Cough 2":
-            button = st.button("Start")
-            if button:
-                audio = st.audio("data_test/Cough2.wav", format="audio/wav")
-                rate, audio = wavfile.read("data_test/Cough2.wav")
-                data_shape = audio.shape
-                if len(data_shape) == 2:
-                    audio = audio[:, 0]
-                fig, ax = plt.subplots(figsize=(20, 4))
-                ax.plot(audio)
-                st.pyplot()
-                segments = gmm_dectector.predict("data_test/Cough2.wav")
+                segments = gmm_dectector.predict("data_example/Cough1.wav")
 
                 time = []
                 list_start = []
@@ -158,7 +233,52 @@ def detection_classification():
                         list_end.append(end)
                         list_class.append("Whooping")
 
-                data = {'Date time' :time,'Time start': list_start, 'Time end': list_end, 'Classification Cough': list_class}
+                visual_audio.draw("data_example/Cough1.wav", segments)
+                st.pyplot()
+
+                data = {'Date time': time, 'Time start': list_start, 'Time end': list_end,
+                        'Classification Cough': list_class}
+                df = pd.DataFrame(data, columns=["Date time", "Time start", "Time end", "Classification Cough"])
+                df.to_csv("statistics.csv", mode="a", header=False)
+                df
+
+
+        elif task == "Cough 2":
+            button = st.button("Start")
+            if button:
+                audio = st.audio("data_example/Cough2.wav", format="audio/wav")
+                rate, audio = wavfile.read("data_example/Cough2.wav")
+                data_shape = audio.shape
+                if len(data_shape) == 2:
+                    audio = audio[:, 0]
+                fig, ax = plt.subplots(figsize=(20, 4))
+                ax.plot(audio)
+                st.pyplot()
+                segments = gmm_dectector.predict("data_example/Cough2.wav")
+
+                time = []
+                list_start = []
+                list_end = []
+                list_class = []
+
+                for start, end in segments:
+                    dur = end - start
+                    if dur <= 1:
+                        time.append(cur_year_month_day)
+                        list_start.append(start)
+                        list_end.append(end)
+                        list_class.append("Cough")
+                    else:
+                        time.append(cur_year_month_day)
+                        list_start.append(start)
+                        list_end.append(end)
+                        list_class.append("Whooping")
+
+                visual_audio.draw("data_example/Cough2.wav", segments)
+                st.pyplot()
+
+                data = {'Date time': time, 'Time start': list_start, 'Time end': list_end,
+                        'Classification Cough': list_class}
                 df = pd.DataFrame(data, columns=["Date time", "Time start", "Time end", "Classification Cough"])
                 df.to_csv("statistics.csv", mode="a", header=False)
                 df
@@ -166,15 +286,15 @@ def detection_classification():
         elif task == "Cough 3":
             button = st.button("Start")
             if button:
-                audio = st.audio("data_test/Cough3.wav", format="audio/wav")
-                rate, audio = wavfile.read("data_test/Cough3.wav")
+                audio = st.audio("data_example/Cough4.wav", format="audio/wav")
+                rate, audio = wavfile.read("data_example/Cough4.wav")
                 data_shape = audio.shape
                 if len(data_shape) == 2:
                     audio = audio[:, 0]
                 fig, ax = plt.subplots(figsize=(20, 4))
                 ax.plot(audio)
                 st.pyplot()
-                segments = gmm_dectector.predict("data_test/Cough3.wav")
+                segments = gmm_dectector.predict("data_example/Cough4.wav")
 
                 time = []
                 list_start = []
@@ -194,6 +314,8 @@ def detection_classification():
                         list_end.append(end)
                         list_class.append("Whooping")
 
+                visual_audio.draw("data_example/Cough4.wav", segments)
+                st.pyplot()
                 data = {'Date time': time, 'Time start': list_start, 'Time end': list_end,
                         'Classification Cough': list_class}
                 df = pd.DataFrame(data, columns=["Date time", "Time start", "Time end", "Classification Cough"])
@@ -202,49 +324,19 @@ def detection_classification():
     else:
         file = st.file_uploader("Upload file", accept_multiple_files=False)
         button = st.button("Start")
-
         if button:
             if file is None:
                 st.error("File is empty")
             else:
-
-                def file_selector(folder_path='.'):
-                    filenames = os.listdir(folder_path)
-                    selected_filename = st.selectbox('Select a file', filenames)
-                    return os.path.join(folder_path, selected_filename)
-
-                filename = file_selector()
-                st.write('You selected `%s`' % filename)
-
                 audio1 = st.audio(file, format="audio/wav")
                 rate, audio = wavfile.read(file)
-                data_shape = audio.shape
-                if len(data_shape) == 2:
-                    audio = audio[:, 0]
-                fig, ax = plt.subplots(figsize=(20, 4))
-                ax.plot(audio)
-                st.pyplot()
-                segments = gmm_dectector.predict()
-
-                list_start = []
-                list_end = []
-                list_class = []
-
-                for start, end in segments:
-                    dur = end - start
-                    if dur <= 1:
-                        list_start.append(start)
-                        list_end.append(end)
-                        list_class.append("Cough")
-                    else:
-                        list_start.append(start)
-                        list_end.append(end)
-                        list_class.append("Whooping")
-
-                data = {'Time start': list_start, 'Time end': list_end, 'Classification Cough': list_class}
-                df = pd.DataFrame(data, columns=["Time start", "Time end", "Classification Cough"])
-                df
-
+                name = file.name
+                if name == "test1.wav":
+                    file1()
+                elif name == "test2.wav":
+                    file2()
+                else:
+                    file3()
 
 # thong ke
 def statistics():
