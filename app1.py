@@ -207,6 +207,15 @@ def detection_classification():
             if file is None:
                 st.error("File is empty")
             else:
+
+                def file_selector(folder_path='.'):
+                    filenames = os.listdir(folder_path)
+                    selected_filename = st.selectbox('Select a file', filenames)
+                    return os.path.join(folder_path, selected_filename)
+
+                filename = file_selector()
+                st.write('You selected `%s`' % filename)
+
                 audio1 = st.audio(file, format="audio/wav")
                 rate, audio = wavfile.read(file)
                 data_shape = audio.shape
@@ -215,7 +224,6 @@ def detection_classification():
                 fig, ax = plt.subplots(figsize=(20, 4))
                 ax.plot(audio)
                 st.pyplot()
-
                 segments = gmm_dectector.predict()
 
                 list_start = []
