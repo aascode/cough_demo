@@ -1,0 +1,11 @@
+streamlit
+yaml
+torch
+torchaudio
+librosa
+numpy
+scipy
+pandas
+requests
+
+
