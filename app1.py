@@ -1,4 +1,7 @@
 import io
+import os
+import shutil
+
 import librosa as ls
 import streamlit as st
 import yaml
@@ -6,8 +9,16 @@ import pandas as pd
 from minio import Minio
 from scipy.io import wavfile
 from matplotlib import pyplot as plt
-
+import csv
 import detection
+from datetime import datetime
+from matplotlib import pyplot as plt
+
+cur_datetime = datetime.now()
+cur_year = cur_datetime.year
+cur_month = cur_datetime.month
+cur_day = cur_datetime.day
+cur_year_month_day = "{}_{}_{}".format(cur_year, cur_month, cur_day)
 
 
 def get_config():
@@ -27,6 +38,22 @@ minio_client = Minio(
     secret_key="minioadmin",
     secure=False
 )
+
+
+def visualize_predictions(signal, fn, preds, sr=16000):
+    fig = plt.figure(figsize=(15, 10))
+    # sns.set()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.plot([i / sr for i in range(len(signal))], signal)
+    for predictions in preds:
+        color = "r" if predictions[2] == 0 else "g"
+        ax.axvspan((predictions[0]) / sr, predictions[1] / sr, alpha=0.5, color=color)
+    plt.title("Prediction on signal {}, speech in green".format(fn), size=20)
+    plt.xlabel("Time (s)", size=20)
+    plt.ylabel("Amplitude", size=20)
+    plt.xticks(size=15)
+    plt.yticks(size=15)
+    plt.show()
 
 
 def update_file():
@@ -57,7 +84,7 @@ def update_file():
 
 def detection_classification():
     st.set_option('deprecation.showPyplotGlobalUse', False)
-    st.subheader("Detectiong and Classification Cough")
+    st.subheader("Detection and Classification Cough")
     status = st.radio("Select : ", ('Example', 'Upload your file'))
     if status == 'Example':
         task = st.selectbox("Test", ["Cough 1", "Cough 2", "Cough 3"])
@@ -74,6 +101,7 @@ def detection_classification():
                 st.pyplot()
                 segments = gmm_dectector.predict("data_test/Cough1.wav")
 
+                time = []
                 list_start = []
                 list_end = []
                 list_class = []
@@ -81,16 +109,22 @@ def detection_classification():
                 for start, end in segments:
                     dur = end - start
                     if dur <= 1:
+                        time.append(cur_year_month_day)
+                        label = "Cough"
                         list_start.append(start)
                         list_end.append(end)
-                        list_class.append("Cough")
+                        list_class.append(label)
                     else:
+                        time.append(cur_year_month_day)
+                        label = "Whooping"
                         list_start.append(start)
                         list_end.append(end)
-                        list_class.append("Whooping")
+                        list_class.append(label)
 
-                data = {'Time start': list_start, 'Time end': list_end, 'Classification Cough': list_class}
-                df = pd.DataFrame(data, columns=["Time start", "Time end", "Classification Cough"])
+
+                data = {'Date time' : time,'Time start': list_start, 'Time end': list_end, 'Classification Cough': list_class}
+                df = pd.DataFrame(data, columns=["Date time", "Time start", "Time end", "Classification Cough"])
+                df.to_csv("statistics.csv", mode="a", header=False)
                 df
 
         elif task == "Cough 2":
@@ -106,6 +140,7 @@ def detection_classification():
                 st.pyplot()
                 segments = gmm_dectector.predict("data_test/Cough2.wav")
 
+                time = []
                 list_start = []
                 list_end = []
                 list_class = []
@@ -113,16 +148,19 @@ def detection_classification():
                 for start, end in segments:
                     dur = end - start
                     if dur <= 1:
+                        time.append(cur_year_month_day)
                         list_start.append(start)
                         list_end.append(end)
                         list_class.append("Cough")
                     else:
+                        time.append(cur_year_month_day)
                         list_start.append(start)
                         list_end.append(end)
                         list_class.append("Whooping")
 
-                data = {'Time start': list_start, 'Time end': list_end, 'Classification Cough': list_class}
-                df = pd.DataFrame(data, columns=["Time start", "Time end", "Classification Cough"])
+                data = {'Date time' :time,'Time start': list_start, 'Time end': list_end, 'Classification Cough': list_class}
+                df = pd.DataFrame(data, columns=["Date time", "Time start", "Time end", "Classification Cough"])
+                df.to_csv("statistics.csv", mode="a", header=False)
                 df
 
         elif task == "Cough 3":
@@ -138,6 +176,48 @@ def detection_classification():
                 st.pyplot()
                 segments = gmm_dectector.predict("data_test/Cough3.wav")
 
+                time = []
+                list_start = []
+                list_end = []
+                list_class = []
+
+                for start, end in segments:
+                    dur = end - start
+                    if dur <= 1:
+                        time.append(cur_year_month_day)
+                        list_start.append(start)
+                        list_end.append(end)
+                        list_class.append("Cough")
+                    else:
+                        time.append(cur_year_month_day)
+                        list_start.append(start)
+                        list_end.append(end)
+                        list_class.append("Whooping")
+
+                data = {'Date time': time, 'Time start': list_start, 'Time end': list_end,
+                        'Classification Cough': list_class}
+                df = pd.DataFrame(data, columns=["Date time", "Time start", "Time end", "Classification Cough"])
+                df.to_csv("statistics.csv", mode="a", header=False)
+                df
+    else:
+        file = st.file_uploader("Upload file", accept_multiple_files=False)
+        button = st.button("Start")
+
+        if button:
+            if file is None:
+                st.error("File is empty")
+            else:
+                audio1 = st.audio(file, format="audio/wav")
+                rate, audio = wavfile.read(file)
+                data_shape = audio.shape
+                if len(data_shape) == 2:
+                    audio = audio[:, 0]
+                fig, ax = plt.subplots(figsize=(20, 4))
+                ax.plot(audio)
+                st.pyplot()
+
+                segments = gmm_dectector.predict()
+
                 list_start = []
                 list_end = []
                 list_class = []
@@ -156,15 +236,52 @@ def detection_classification():
                 data = {'Time start': list_start, 'Time end': list_end, 'Classification Cough': list_class}
                 df = pd.DataFrame(data, columns=["Time start", "Time end", "Classification Cough"])
                 df
-    else:
-        file = st.file_uploader("Upload file", accept_multiple_files=False)
-        button = st.button("Start")
 
-        if button:
-            if file is None:
-                st.error("File is empty")
-            else:
-                st.success("Send file successful, Thank you!!!")
+
+# thong ke
+def statistics():
+    st.subheader("Cough Statistics")
+    status = st.radio("Select : ", ('Today', 'All'))
+    if status == "Today":
+        count_cough = 0
+        count_whooping = 0
+        with open('statistics.csv', newline='') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row[1] == cur_year_month_day:
+                    if row[4] == 'Cough':
+                        count_cough += 1
+                    else:
+                        count_whooping += 1
+        st.write("Cough: {}".format(count_cough))
+        st.write("Whooping: {}".format(count_whooping))
+        x = ["Cough", "Whooping"]
+        y = [count_cough, count_whooping]
+        plt.bar(x, y)
+        plt.title('Bar Graph Statistic Today')
+        plt.xlabel('Type cough')
+        plt.ylabel('Sum labels')
+        st.pyplot()
+
+    else:
+        count_cough = 0
+        count_whooping = 0
+        with open('statistics.csv', newline='') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row[4] == 'Cough':
+                    count_cough += 1
+                else:
+                    count_whooping += 1
+        st.write("Cough: {}".format(count_cough))
+        st.write("Whooping: {}".format(count_whooping))
+        x = ["Cough", "Whooping"]
+        y = [count_cough, count_whooping]
+        plt.bar(x, y)
+        plt.title('Bar Graph Statistics All')
+        plt.xlabel('Type cough')
+        plt.ylabel('Sum labels')
+        st.pyplot()
 
 
 st.title("Cough Monitoring System")
@@ -183,6 +300,6 @@ if st.sidebar.checkbox("Login"):
             detection_classification()
 
         elif task == "Cough Statistics":
-            st.subheader("User Profiles")
+            statistics()
     else:
         st.warning("Incorrect Username/Password")
