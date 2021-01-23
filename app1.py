@@ -30,6 +30,7 @@ def get_config():
 
 gmm_dectector = detection.GMM_Detector()
 
+
 account = get_config()["account"]
 
 # create a cline minio
@@ -246,15 +247,15 @@ def detection_classification():
         elif task == "Cough 2":
             button = st.button("Start")
             if button:
-                audio = st.audio("data_example/Cough2.wav", format="audio/wav")
-                rate, audio = wavfile.read("data_example/Cough2.wav")
+                audio = st.audio("data_example/Cough5.wav", format="audio/wav")
+                rate, audio = wavfile.read("data_example/Cough5.wav")
                 data_shape = audio.shape
                 if len(data_shape) == 2:
                     audio = audio[:, 0]
                 fig, ax = plt.subplots(figsize=(20, 4))
                 ax.plot(audio)
                 st.pyplot()
-                segments = gmm_dectector.predict("data_example/Cough2.wav")
+                segments = detection.LSTMDetector.predict("data_example/Cough5.wav")
 
                 time = []
                 list_start = []
@@ -274,7 +275,7 @@ def detection_classification():
                         list_end.append(end)
                         list_class.append("Whooping")
 
-                visual_audio.draw("data_example/Cough2.wav", segments)
+                visual_audio.draw("data_example/Cough5.wav", segments)
                 st.pyplot()
 
                 data = {'Date time': time, 'Time start': list_start, 'Time end': list_end,
