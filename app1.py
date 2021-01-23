@@ -198,6 +198,7 @@ def file3():
 
 
 def detection_classification():
+    gmmm_detection = detection.LSTMDetector()
     st.set_option('deprecation.showPyplotGlobalUse', False)
     st.subheader("Detection and Classification Cough")
     status = st.radio("Select : ", ('Example', 'Upload your file'))
@@ -255,7 +256,7 @@ def detection_classification():
                 fig, ax = plt.subplots(figsize=(20, 4))
                 ax.plot(audio)
                 st.pyplot()
-                segments = detection.LSTMDetector.predict("data_example/Cough5.wav")
+                segments = gmm_dectector.predict("data_example/Cough5.wav")
 
                 time = []
                 list_start = []
